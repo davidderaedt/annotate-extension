@@ -5,6 +5,8 @@ A brackets extension to generate JSDoc annotations for your functions.
 
 To install, place the ```annotate``` folder inside the ```brackets/src/extensions/user``` folder.
 
+**Compatible with Brackets Sprint10**
+
 Usage
 =====
 Open a project in Brackets, place your cursor before a function definition, and select ```Annotate``` form the ```Edit``` menu.

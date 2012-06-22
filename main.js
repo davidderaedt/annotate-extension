@@ -128,6 +128,6 @@ define(function (require, exports, module) {
 
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuDivider();
-    menu.addMenuItem("menu-edit-annotate", COMMAND_ID);
+    menu.addMenuItem(COMMAND_ID);//"menu-edit-annotate", 
 
 });
