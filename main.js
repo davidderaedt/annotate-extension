@@ -40,29 +40,12 @@ define(function (require, exports, module) {
     var MENU_NAME   = "Annotate function";
 
 
-    function insert(input) {
-            
-        
+    function insert(input) {            
+
         var editor = EditorManager.getCurrentFullEditor();
         var pos = editor.getCursorPos();
-                        
-        var i;
-        var lines = input.split("\n");
         
-        
-        for (i = 0; i < lines.length; i++) {
-            
-            if (i !== lines.length - 1) {
-                lines[i] = lines[i] + "\n";
-            }
-            
-            editor._codeMirror.setLine(pos.line, lines[i]);
-            
-            // TODO: indent (looks like code mirror does not indent correctly multiline comments)
-            //editor._codeMirror.indentLine(pos.line);
-            
-            pos.line++;
-        }
+        editor._codeMirror.replaceRange(input, pos);
 
         EditorManager.focusEditor();
         
@@ -111,7 +94,7 @@ define(function (require, exports, module) {
         
         // TODO use if 'return' is found in the function body?
         //output += " * @return {type} ???\n";
-        output += " */";
+        output += " */\n";
         
         return output;
     }
