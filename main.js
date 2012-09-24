@@ -39,21 +39,20 @@ define(function (require, exports, module) {
     var COMMAND_ID  = "annotate.annotate";
     var MENU_NAME   = "Annotate function";
 
+    
 
     function insert(input) {            
-
+        
         var editor = EditorManager.getCurrentFullEditor();
         var pos = editor.getCursorPos();
         
         editor._codeMirror.replaceRange(input, pos);
 
-        EditorManager.focusEditor();
-        
+        EditorManager.focusEditor();        
     }
 
-    function _generateComment() {
-        
-        var output = "/**\n";
+    
+    function getTarget() {
         
         var editor = EditorManager.getCurrentFullEditor();
         var pos = editor.getCursorPos();
@@ -69,13 +68,31 @@ define(function (require, exports, module) {
         var results = txtFrom.match(re);
         
         // The first word found should be "function", and next ones parameters
-        if (results[0] !== "function") {
-            window.alert(EMPTY_MSG);
-            return;
+        
+        if (results[0] === "function") {
+            return {
+                name: results[1],
+                params: results.slice(2)
+            };
+        } 
+        else if (results[0] === "var" && results[2] === "function") { 
+            return {
+                name: results[1],
+                params: results.slice(3)
+            };            
         }
+        else {
+            return null;
+        }
+        
+    }
+    
+    
+    function generateComment(fname, params) {
+        
+        var output = "/**\n";
                 
         // Assume function is private if it starts with an underscore
-        var fname = results[1];
         if (fname.charAt(0) === "_") {
             output += " * @private\n";
         }
@@ -84,10 +101,10 @@ define(function (require, exports, module) {
         output += " * Description\n";
         
         // Add parameters
-        if (results.length > 2) {
+        if (params.length > 0) {
             var i;
-            for (i = 2; i < results.length; i++) {
-                var param = results[i];
+            for (i = 0; i < params.length; i++) {
+                var param = params[i];
                 output += " * @param {type} " + param + " Description\n";
             }
         }
@@ -100,9 +117,18 @@ define(function (require, exports, module) {
     }
 
     
+    
     function annotate() {
         
-        var comment = _generateComment();
+        var target = getTarget();
+        
+        if(target === null) {
+            window.alert(EMPTY_MSG);
+            return;
+        }
+        
+        var comment = generateComment(target.name, target.params);
+        
         insert(comment);
     }
 

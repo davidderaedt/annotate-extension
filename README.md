@@ -17,8 +17,6 @@ This will create a JSDoc like annotation according to the function signature.  I
 Known issues
 =====
 
-Will only work with function declared with the form ```function name ([parameters]) {}```.
-
 Annotations are not correctly indented.
 
 No ```@return``` is generated since the extension only looks at the function signature to generate the annotation, not its body.
