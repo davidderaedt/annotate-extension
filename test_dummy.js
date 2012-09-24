@@ -30,5 +30,11 @@ define(function (require, exports, module) {
         
     }
 
+    var _privateStuff = function(p1, p2) {
+        
+        var content = "I start with an underscore";
+        
+    };
+    
     
 });
