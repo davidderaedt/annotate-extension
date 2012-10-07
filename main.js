@@ -30,9 +30,10 @@ define(function (require, exports, module) {
     'use strict';
 
 
-    var CommandManager = brackets.getModule("command/CommandManager"),
-        EditorManager  = brackets.getModule("editor/EditorManager"),
-        Menus          = brackets.getModule("command/Menus");
+    var CommandManager      = brackets.getModule("command/CommandManager"),
+        EditorManager       = brackets.getModule("editor/EditorManager"),
+        KeyBindingManager   = brackets.getModule("command/KeyBindingManager"),
+        Menus               = brackets.getModule("command/Menus");
 
 
     var EMPTY_MSG   = "No function found";
@@ -44,7 +45,7 @@ define(function (require, exports, module) {
     function insert(input) {            
         
         var editor = EditorManager.getCurrentFullEditor();
-        var pos = editor.getCursorPos();
+        var pos    = editor.getCursorPos();
         pos.ch = 0;       
  
         editor._codeMirror.replaceRange(input, pos);
@@ -61,7 +62,7 @@ define(function (require, exports, module) {
     function getPrefix(input, match) {
         
         var indexOf = input.indexOf(match),
-            prefix = "";
+            prefix  = "";
         if (indexOf != -1) {
             prefix = input.substr(0, indexOf);
         }
@@ -73,7 +74,7 @@ define(function (require, exports, module) {
     function getTarget() {
         
         var editor = EditorManager.getCurrentFullEditor();
-        var pos = editor.getCursorPos();
+        var pos    = editor.getCursorPos();
         pos.ch = 0;       
  
         // Take the text of the document, starting with the current cursor line
@@ -183,6 +184,7 @@ define(function (require, exports, module) {
 
 
     CommandManager.register(MENU_NAME, COMMAND_ID, annotate);
+    KeyBindingManager.addBinding(COMMAND_ID, "Ctrl-Shift-D");
 
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuDivider();
