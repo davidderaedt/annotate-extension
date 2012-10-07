@@ -5,7 +5,7 @@ A brackets extension to generate JSDoc annotations for your functions.
 
 To install, place the ```annotate``` folder inside the ```brackets/src/extensions/user``` folder.
 
-**Compatible with Brackets Sprint10**
+**Compatible with Brackets Sprint10 and higher**
 
 Usage
 =====
