@@ -86,7 +86,7 @@ define(function (require, exports, module) {
         // Look for words
         var re = /\w+/g;
         var results = txtFrom.match(re);
-        
+                
         // The first word found should be "function", and next ones parameters
         
         if (results[0] === "function") {
@@ -117,7 +117,8 @@ define(function (require, exports, module) {
                 prefix: getPrefix(txtFrom, results[0])
             };            
         }
-        else if (results[0] === "var" && results[1] === "function") { 
+        else if (results[0] === "var" && results[2] === "function") { 
+            
             return {
                 name: results[1],
                 params: results.slice(3),
@@ -163,7 +164,7 @@ define(function (require, exports, module) {
         //output += " * @return {type} ???\n";
         output.push(" */");
         
-        return prefix + output.join("\n" + prefix) + "\n";
+        return prefix + output.join( prefix) + "\n";
     }
 
     
