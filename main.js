@@ -39,7 +39,7 @@ define(function (require, exports, module) {
     var EMPTY_MSG   = "No function found";
     var COMMAND_ID  = "annotate.annotate";
     var MENU_NAME   = "Annotate function";
-
+    
     
 
     function insert(input) {            
