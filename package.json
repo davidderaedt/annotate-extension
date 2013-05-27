@@ -1,0 +1,12 @@
+{
+    "name": "dehats.annotate",
+    "title": "Annotate",
+    "description": "Generates JSDoc annotations for your functions.",
+    "homepage": "https://github.com/davidderaedt/annotate-extension",
+    "version": "1.0.0",
+    "author": "David Deraedt <dderaedt@adobe.com> (http://www.dehats.com)",
+    "license": "MIT",
+    "engines": {
+        "brackets": ">=0.20.0"
+    }
+}
