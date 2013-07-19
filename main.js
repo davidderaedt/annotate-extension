@@ -185,7 +185,7 @@ define(function (require, exports, module) {
 
 
     CommandManager.register(MENU_NAME, COMMAND_ID, annotate);
-    KeyBindingManager.addBinding(COMMAND_ID, "Ctrl-Shift-D");
+    KeyBindingManager.addBinding(COMMAND_ID, "Ctrl-Shift-C");
 
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuDivider();
