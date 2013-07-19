@@ -42,11 +42,11 @@ define(function (require, exports, module) {
     
     
 
-    function insert(input) {            
+    function insert(input) {
         
         var editor = EditorManager.getCurrentFullEditor();
         var pos    = editor.getCursorPos();
-        pos.ch = 0;       
+        pos.ch = 0;
  
         editor._codeMirror.replaceRange(input, pos);
 
@@ -63,7 +63,7 @@ define(function (require, exports, module) {
         
         var indexOf = input.indexOf(match),
             prefix  = "";
-        if (indexOf != -1) {
+        if (indexOf !== -1) {
             prefix = input.substr(0, indexOf);
         }
         
@@ -75,7 +75,7 @@ define(function (require, exports, module) {
         
         var editor = EditorManager.getCurrentFullEditor();
         var pos    = editor.getCursorPos();
-        pos.ch = 0;       
+        pos.ch = 0;
  
         // Take the text of the document, starting with the current cursor line
         var txtFrom = editor._codeMirror.getRange(pos, {line: editor._codeMirror.lineCount() });
@@ -95,37 +95,32 @@ define(function (require, exports, module) {
                 params: results.slice(2),
                 prefix: getPrefix(txtFrom, results[0])
             };
-        } 
-        else if (results[0] === "private" && results[1] === "function") { 
+        } else if (results[0] === "private" && results[1] === "function") {
             return {
                 name: results[1],
                 params: results.slice(3),
                 prefix: getPrefix(txtFrom, results[0])
-            };            
-        }
-        else if (results[0] === "public" && results[1] === "function") { 
+            };
+        } else if (results[0] === "public" && results[1] === "function") {
             return {
                 name: results[1],
                 params: results.slice(3),
                 prefix: getPrefix(txtFrom, results[0])
-            };            
-        }
-        else if (results[0] === "static" && results[1] === "function") { 
+            };
+        } else if (results[0] === "static" && results[1] === "function") {
             return {
                 name: results[1],
                 params: results.slice(3),
                 prefix: getPrefix(txtFrom, results[0])
-            };            
-        }
-        else if (results[0] === "var" && results[2] === "function") { 
+            };
+        } else if (results[0] === "var" && results[2] === "function") {
             
             return {
                 name: results[1],
                 params: results.slice(3),
                 prefix: getPrefix(txtFrom, results[0])
-            };            
-        }
-        else {
+            };
+        } else {
             return null;
         }
         
@@ -164,7 +159,7 @@ define(function (require, exports, module) {
         //output += " * @return {type} ???\n";
         output.push(" */");
         
-        return prefix + output.join( prefix) + "\n";
+        return prefix + output.join(prefix) + "\n";
     }
 
     
@@ -173,7 +168,7 @@ define(function (require, exports, module) {
         
         var target = getTarget();
         
-        if(target === null) {
+        if (target === null) {
             window.alert(EMPTY_MSG);
             return;
         }
