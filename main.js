@@ -39,56 +39,56 @@ define(function (require, exports, module) {
     var EMPTY_MSG   = "No function found";
     var COMMAND_ID  = "annotate.annotate";
     var MENU_NAME   = "Annotate function";
-    
-    
+
+
 
     function insert(input) {
-        
+
         var editor = EditorManager.getCurrentFullEditor();
         var pos    = editor.getCursorPos();
         pos.ch = 0;
- 
+
         editor._codeMirror.replaceRange(input, pos);
 
         EditorManager.focusEditor();
-        
+
     }
-    
+
     /**
      * get the whitespace characters from line start to beginning of function def
      * @param string input lines from start of the function definition
      * @param string match function definition start
      */
     function getPrefix(input, match) {
-        
+
         var indexOf = input.indexOf(match),
             prefix  = "";
         if (indexOf !== -1) {
             prefix = input.substr(0, indexOf);
         }
-        
+
         return prefix;
-        
+
     }
-    
+
     function getTarget() {
-        
+
         var editor = EditorManager.getCurrentFullEditor();
         var pos    = editor.getCursorPos();
         pos.ch = 0;
- 
+
         // Take the text of the document, starting with the current cursor line
         var txtFrom = editor._codeMirror.getRange(pos, {line: editor._codeMirror.lineCount() });
-        
+
         // For now, we generate annotations from the signature only (missing return statements)
         txtFrom = txtFrom.substr(0, txtFrom.indexOf("{"));
-        
+
         // Look for words
         var re = /\w+/g;
         var results = txtFrom.match(re);
-                
+
         // The first word found should be "function", and next ones parameters
-        
+
         if (results[0] === "function") {
             return {
                 name: results[1],
@@ -114,19 +114,33 @@ define(function (require, exports, module) {
                 prefix: getPrefix(txtFrom, results[0])
             };
         } else if (results[0] === "var" && results[2] === "function") {
-            
+
             return {
                 name: results[1],
                 params: results.slice(3),
                 prefix: getPrefix(txtFrom, results[0])
             };
+        } else if(results[0] === "this" && results[2] === "function"){
+
+            return {
+                name: results[1],
+                params: results.slice(3),
+                prefix: getPrefix(txtFrom, results[0])
+            };
+        } else if (results[1] === "function") {
+
+            return {
+                name: results[0],
+                params: results.slice(2),
+                prefix: getPrefix(txtFrom, results[0])
+            };
         } else {
             return null;
         }
-        
+
     }
-    
-    
+
+
     /**
      * Generate comment block
      * @param string fname function name
@@ -134,18 +148,18 @@ define(function (require, exports, module) {
      * @param string prefix whitespace prefix for comment block lines
      */
     function generateComment(fname, params, prefix) {
-        
+
         var output = [];
         output.push("/**");
-                
+
         // Assume function is private if it starts with an underscore
         if (fname.charAt(0) === "_") {
             output.push(" * @private");
         }
-        
+
         // Add description
         output.push(" * Description");
-        
+
         // Add parameters
         if (params.length > 0) {
             var i;
@@ -154,27 +168,27 @@ define(function (require, exports, module) {
                 output.push(" * @param {type} " + param + " Description");
             }
         }
-        
+
         // TODO use if 'return' is found in the function body?
         //output += " * @return {type} ???\n";
         output.push(" */");
-        
+
         return prefix + output.join(prefix) + "\n";
     }
 
-    
-    
+
+
     function annotate() {
-        
+
         var target = getTarget();
-        
+
         if (target === null) {
             window.alert(EMPTY_MSG);
             return;
         }
-        
+
         var comment = generateComment(target.name, target.params, target.prefix);
-        
+
         insert(comment);
     }
 
@@ -184,6 +198,6 @@ define(function (require, exports, module) {
 
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuDivider();
-    menu.addMenuItem(COMMAND_ID);//"menu-edit-annotate", 
+    menu.addMenuItem(COMMAND_ID);//"menu-edit-annotate",
 
 });
