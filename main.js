@@ -173,7 +173,7 @@ define(function (require, exports, module) {
         //output += " * @return {type} ???\n";
         output.push(" */");
 
-        return prefix + output.join(prefix) + "\n";
+        return prefix + output.join("\n" + prefix) + "\n";
     }
 
 
