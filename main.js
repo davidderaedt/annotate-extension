@@ -84,7 +84,7 @@ define(function (require, exports, module) {
         txtFrom = txtFrom.substr(0, txtFrom.indexOf("{"));
 
         // Look for words
-        var re = /\w+/g;
+        var re = /[$,\w]+/g;
         var results = txtFrom.match(re);
 
         // The first word found should be "function", and next ones parameters
