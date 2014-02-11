@@ -134,6 +134,12 @@ define(function (require, exports, module) {
                 params: results.slice(2),
                 prefix: getPrefix(txtFrom, results[0])
             };
+        } else if (results[1] === "function") {
+            return {
+                name: results[0],
+                params: results.slice(2),
+                prefix: getPrefix(txtFrom, results[0])
+            };
         } else {
             return null;
         }
@@ -173,7 +179,7 @@ define(function (require, exports, module) {
         //output += " * @return {type} ???\n";
         output.push(" */");
 
-        return prefix + output.join("\n" + prefix) + "\n";
+        return prefix + output.join(prefix);
     }
 
 
