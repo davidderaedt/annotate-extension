@@ -140,6 +140,17 @@ define(function (require, exports, module) {
                 params: results.slice(2),
                 prefix: getPrefix(txtFrom, results[0])
             };
+        } else if(txtFrom.indexOf('.prototype.')){
+            var i = 1;
+            for(;i<results.length; i+=1){
+                if(results[i] === 'function'){
+                    return {
+                        name: results[i-1],
+                        params: results.slice(i+1),
+                        prefix: getPrefix(txtFrom, results[0])
+                    };
+                }
+            }
         } else {
             return null;
         }
