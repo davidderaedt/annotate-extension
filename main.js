@@ -64,7 +64,7 @@ define(function (require, exports, module) {
         var indexOf = input.indexOf(match),
             prefix  = "";
         if (indexOf !== -1) {
-            prefix = input.substr(0, indexOf);
+            prefix = input.substr(0, indexOf).replace(/[^\s\n]/g,'');
         }
 
         return prefix;
