@@ -95,7 +95,7 @@ define(function (require, exports, module) {
         txtFrom = txtFrom.substr(0, txtFrom.indexOf("{"));
 
         //take any comment off
-        txtFrom = txtFrom.replace(new RegExp(REGEX_PATTERNS.comment,'g'), '')
+        txtFrom = txtFrom.replace(new RegExp(REGEX_PATTERNS.comment,'g'), '');
         
         var results = txtFrom.match(new RegExp(REGEX_PATTERNS.jsVariable,'g'));
         switch(true) {
