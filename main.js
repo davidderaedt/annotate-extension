@@ -81,7 +81,7 @@ define(function (require, exports, module) {
             functionDeclarationRegex = new RegExp('^[a-z0-9]*\\s*\\n*\\bfunction\\b\\s*' + REGEX_PATTERNS.jsVariable + '\\s*\\(\\s*(' +
                                                   REGEX_PATTERNS.jsVariable + '\\s*,?)*\\s*\\)','g'),
 
-            functionExpresionRegex = new RegExp('^[a-z0-9]*\\s*\\n*(var)?\\s*'+ REGEX_PATTERNS.jsVariable + '\\s*=\\s*function\\s*\\(\\s*(' +
+            functionExpresionRegex = new RegExp('^[a-z0-9]*\\s*\\n*(var|'+ REGEX_PATTERNS.jsVariable + '.)?\\s*'+ REGEX_PATTERNS.jsVariable + '\\s*=\\s*function\\s*\\(\\s*(' +
                                                 REGEX_PATTERNS.jsVariable + '\\s*(,\\s*)?)*\\s*\\)\\s*','g');
 
         pos.ch = 0;
@@ -100,17 +100,16 @@ define(function (require, exports, module) {
         var results = txtFrom.match(new RegExp(REGEX_PATTERNS.jsVariable,'g'));
         switch(true) {
         case functionExpresionRegex.test(txtFrom):
-
             return {
                 //check for 'var'
-                name:results[results.indexOf('var') === -1 ? 0:1],
-                params:results.slice(results.indexOf('var') === -1 ? 2:3),
+                name:results[results.indexOf('function')-1],
+                params:results.slice(results.indexOf('function')+1),
                 prefix: getPrefix(txtFrom, results[0]),
                 returnsValue:returnsValue
             };
         case functionDeclarationRegex.test(txtFrom):
-             console.log(results[1]);
-                return {
+            //console.log(results[1]);
+            return {
                 name:results[1],
                 params:results.slice(2),
                 prefix: getPrefix(txtFrom, results[0]),
