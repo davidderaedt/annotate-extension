@@ -16,7 +16,4 @@ Alternatively, use the keyboard shortcut `CTRL`+`Alt`+`A` on Windows, or `⌘`+`
 This will create a JSDoc like annotation according to the function signature.  It will add ```@private``` if the function starts with an underscore. It will create a ```@param``` for each parameter.
 
 
-Known issues
-=====
 
-No ```@return``` is generated since the extension only looks at the function signature to generate the annotation, not its body.
