@@ -8,7 +8,7 @@ define(function (require, exports, module) {
     'use strict';
 
 
-    var greetings = "Hello world"),
+    var greetings = "Hello world";
     
 
     function declaration(input) {            
@@ -30,11 +30,35 @@ define(function (require, exports, module) {
         
     }
 
+
     var _privateStuff = function(p1, p2) {
-        
         var content = "I start with an underscore";
+    };
+    
+    
+    var myObject = {};
+    
+    myObject.myFunction = function (param1, param2, param3) {
         
     };
     
+
+    myObject.prototype.myFunction = function (param1, param2) {
+    
+    };
+    
+    
+    var a = {
+        doA: function(param1, param2){
+            var content = "stuff";
+            
+            return content;
+        },
+        doB: function(param1, param2){
+            var content = "stuff";
+            
+            return content;
+        }
+    };
     
 });
