@@ -81,7 +81,7 @@ define(function (require, exports, module) {
             functionDeclarationRegex = new RegExp('^[a-z0-9]*\\s*\\n*\\bfunction\\b\\s*' + REGEX_PATTERNS.jsVariable + '\\s*\\(\\s*(' +
                                                   REGEX_PATTERNS.jsVariable + '\\s*,?)*\\s*\\)','g'),
 
-            functionExpresionRegex = new RegExp('^[a-z0-9]*\\s*\\n*(var|'+ REGEX_PATTERNS.jsVariable + '.)?\\s*'+ REGEX_PATTERNS.jsVariable + '\\s*=\\s*function\\s*\\(\\s*(' +
+            functionExpresionRegex = new RegExp('^[a-z0-9]*\\s*\\n*(var|(' + REGEX_PATTERNS.jsVariable + '.)*(' + REGEX_PATTERNS.jsVariable + ')?)?\\s*'+ REGEX_PATTERNS.jsVariable + '\\s*(=|:)\\s*function\\s*\\(\\s*(' +
                                                 REGEX_PATTERNS.jsVariable + '\\s*(,\\s*)?)*\\s*\\)\\s*','g');
 
         pos.ch = 0;
