@@ -26,160 +26,150 @@
 
 /** extension to generate JSDoc annotations for functions */
 define(function (require, exports, module) {
-
     'use strict';
 
 
-    var CommandManager      = brackets.getModule("command/CommandManager"),
-        EditorManager       = brackets.getModule("editor/EditorManager"),
-        KeyBindingManager   = brackets.getModule("command/KeyBindingManager"),
-        Menus               = brackets.getModule("command/Menus");
+    var AppInit = brackets.getModule("utils/AppInit"),
+        CommandManager = brackets.getModule("command/CommandManager"),
+        EditorManager = brackets.getModule("editor/EditorManager"),
+        KeyBindingManager = brackets.getModule("command/KeyBindingManager"),
+        Menus = brackets.getModule("command/Menus"),
+        Acorn_loose = require("thirdparty/acorn/acorn_loose"),
+        Walker = require("thirdparty/acorn/util/walk");
 
+    var EMPTY_MSG = "No function found";
+    var COMMAND_ID = "annotate.annotate";
+    var MENU_NAME = "Annotate function";
 
-    var EMPTY_MSG   = "No function found";
-    var COMMAND_ID  = "annotate.annotate";
-    var MENU_NAME   = "Annotate function";
+    // Global editor instance
+    var _editor = {};
+    var _output = {};
     
-    var REGEX_PATTERNS = {
-        comment: '\\/\\*.*\\*\\/',
-        jsVariable: '[$A-Za-z_][0-9A-Za-z_$]*'
+    
+    /**
+     * Create a jsdoc annotation and prepend it in the active document
+     */ 
+    var annotate = function () {
+        // Get current active editor
+        _editor = EditorManager.getCurrentFullEditor();
+
+        //Get cursor position and set it to the beginning of the line
+        var pos = _editor.getCursorPos();
+        pos.ch = 0;
+
+        // Get the text from the start of the document to the current cursor position and count it's length'
+        var txtTo = _editor._codeMirror.getRange({
+            line: 0,
+            ch: 0
+        }, pos);
+        var cursorPosition = txtTo.length;
+
+        // Get full txt
+        var fullTxt = _editor._codeMirror.getValue();
+
+        // Parse text
+        var acornTxtFull = Acorn_loose.parse_dammit(fullTxt, {
+            locations: true
+        });
+
+        // Find next function
+        var found = new Walker.findNodeAfter(acornTxtFull, cursorPosition, "Function");
+
+        if (found) {
+            // There was a result, so build jsdoc
+            _output = {};
+            _output.loc = found.node.loc;
+            _output.prefix = "";
+            _output.name = found.node.id ? found.node.id.name : null;
+            _output.params = [];
+            _output.returnValue = undefined;
+
+            // Add parameters to the _output object
+            found.node.params.forEach(function (param) {
+                _output.params.push(param.name);
+            });
+
+            // Find and add return value
+            var foundReturnValue = new Walker.findNodeAfter(found.node, 0, "ReturnStatement");
+            _output.returnValue = foundReturnValue.node ? foundReturnValue.node.argument.name : undefined;
+
+            // set prefix (find first none whitespace character)
+            var codeLine = _editor._codeMirror.getLine(_output.loc.start.line - 1);
+            _output.prefix = codeLine.substr(0, codeLine.length - codeLine.trimLeft().length).replace(/[^\s\n]/g, ' ');
+
+            // build annotation string
+            var _outputString = _getJSDocString(_output);
+
+            // insertJsdoc string into editor
+            _insertJSDocString(_outputString, _output.loc);
+        } else {
+            // No function definition found
+            window.alert(EMPTY_MSG);
+        }
     };
 
-    function insert(input) {
-        
-        var editor = EditorManager.getCurrentFullEditor();
-        var pos    = editor.getCursorPos();
-        pos.ch = 0;
- 
-        editor._codeMirror.replaceRange(input, pos);
+    /**
+     * Get a functions name 
+     */ 
+    var _getName = function () {
+        //Todo
+    };
+
+    /**
+     * Get a functions return value
+     */ 
+    var _getReturnValue = function () {
+        //Todo
+    };
+
+    /**
+     * Build the string representation of the  
+     * @param {object} jsdoc object containing jsdoc properties 
+     * @returns {string} annotation as a string 
+     */ 
+    var _getJSDocString = function (jsdoc) {
+        var jsdocString = jsdoc.prefix + "/**\n";
+
+        if (jsdoc.name && jsdoc.name.charAt(0) === "_") {
+            jsdocString += jsdoc.prefix + " * @private \n";
+        }
+
+        // Add description
+        jsdocString += jsdoc.prefix + " * Description \n";
+
+        jsdoc.params.forEach(function (param) {
+            jsdocString += jsdoc.prefix + " * @param {type} " + param + " Description \n";
+        });
+        if (jsdoc.returnValue)
+            jsdocString += jsdoc.prefix + " * @returns {type} Description \n";
+
+        jsdocString += jsdoc.prefix + " */ \n";
+
+        return jsdocString;
+    };
+
+    /**
+     * Insert the JSDoc annotation string to the document 
+     * @param {string} jSDocString The JSDoc annotation string
+     * @param {location} loc location of the function found 
+     */ 
+    var _insertJSDocString = function (jSDocString, loc) {
+        var pos = {
+            line: loc.start.line - 1,
+            ch: 0
+        };
+
+        // Place jsdocString in the editor
+        _editor._codeMirror.replaceRange(jSDocString, pos);
 
         EditorManager.focusEditor();
-        
-    }
-    
-    /**
-     * get the whitespace characters from line start to beginning of function def
-     * @param string input lines from start of the function definition
-     * @param string match function definition start
-     */
-    function getPrefix(input, match) {
-        
-        var indexOf = input.indexOf(match),
-            prefix  = "";
-        if (indexOf !== -1) {
-            prefix = input.substr(0, indexOf).replace(/[^\s\n]/g, ' ');
-        }
-        
-        return prefix;
-        
-    }
-    
-    function getTarget() {
-        
-        var editor = EditorManager.getCurrentFullEditor(),
-            pos    = editor.getCursorPos(),
-            functionDeclarationRegex = new RegExp('^[a-z0-9]*\\s*\\n*\\bfunction\\b\\s*' + REGEX_PATTERNS.jsVariable + '\\s*\\(\\s*(' +
-                                                  REGEX_PATTERNS.jsVariable + '\\s*,?)*\\s*\\)','g'),
+    };
 
-            functionExpresionRegex = new RegExp('^[a-z0-9]*\\s*\\n*(var|(' + REGEX_PATTERNS.jsVariable + '.)*(' + REGEX_PATTERNS.jsVariable + ')?)?\\s*'+ REGEX_PATTERNS.jsVariable + '\\s*(=|:)\\s*function\\s*\\(\\s*(' +
-                                                REGEX_PATTERNS.jsVariable + '\\s*(,\\s*)?)*\\s*\\)\\s*','g');
-
-        pos.ch = 0;
- 
-        // Take the text of the document, starting with the current cursor line
-        var txtFrom = editor._codeMirror.getRange(pos, {line: editor._codeMirror.lineCount() });
-        
-        //checks if there is a return value
-        var returnsValue = txtFrom.substr( txtFrom.indexOf('{'), txtFrom.indexOf('}')).search('return') !== -1;
-        
-        txtFrom = txtFrom.substr(0, txtFrom.indexOf("{"));
-
-        //take any comment off
-        txtFrom = txtFrom.replace(new RegExp(REGEX_PATTERNS.comment,'g'), '');
-        
-        var results = txtFrom.match(new RegExp(REGEX_PATTERNS.jsVariable,'g'));
-        switch(true) {
-        case functionExpresionRegex.test(txtFrom):
-            return {
-                //check for 'var'
-                name:results[results.indexOf('function')-1],
-                params:results.slice(results.indexOf('function')+1),
-                prefix: getPrefix(txtFrom, results[0]),
-                returnsValue:returnsValue
-            };
-        case functionDeclarationRegex.test(txtFrom):
-            //console.log(results[1]);
-            return {
-                name:results[1],
-                params:results.slice(2),
-                prefix: getPrefix(txtFrom, results[0]),
-                returnsValue:returnsValue
-            };
-        default:
-            return null;
-        }
-    }
-    
-    
-    /**
-     * Generate comment block
-     * @param string fname function name
-     * @param string params function parameters
-     * @param string prefix whitespace prefix for comment block lines
-     */
-    function generateComment(fname, params,returnsValue, prefix) {
-        
-        var output = [];
-        output.push("/**");
-                
-        // Assume function is private if it starts with an underscore
-        if (fname.charAt(0) === "_") {
-            output.push(" * @private");
-        }
-        
-        // Add description
-        output.push(" * Description");
-        
-        // Add parameters
-        if (params.length > 0) {
-            var i;
-            for (i = 0; i < params.length; i++) {
-                var param = params[i];
-                output.push(" * @param {type} " + param + " Description");
-            }
-        }
-        
-        if (returnsValue) output.push(" * @returns {type} Description");
-
-        // TODO use if 'return' is found in the function body?
-        //output += " * @return {type} ???\n";
-        output.push(" */");
-        
-        return prefix + output.join("\n" + prefix) + "\n";
-    }
-
-    
-    
-    function annotate() {
-        
-        var target = getTarget();
-        
-        if (target === null) {
-            window.alert(EMPTY_MSG);
-            return;
-        }
-        
-        var comment = generateComment(target.name, target.params, target.returnsValue, target.prefix);
-        
-        insert(comment);
-    }
-
-
+    // Register stuff when brackets finished loading
     CommandManager.register(MENU_NAME, COMMAND_ID, annotate);
     KeyBindingManager.addBinding(COMMAND_ID, "Ctrl-Alt-A");
 
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuDivider();
-    menu.addMenuItem(COMMAND_ID);//"menu-edit-annotate", 
-
+    menu.addMenuItem(COMMAND_ID); //"menu-edit-annotate", 
 });
