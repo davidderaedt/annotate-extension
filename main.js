@@ -34,135 +34,113 @@ define(function (require, exports, module) {
         EditorManager = brackets.getModule("editor/EditorManager"),
         KeyBindingManager = brackets.getModule("command/KeyBindingManager"),
         Menus = brackets.getModule("command/Menus"),
-        Acorn_loose = require("thirdparty/acorn/acorn_loose"),
-        Walker = require("thirdparty/acorn/util/walk");
+        esprima = require("thirdparty/esprima-master/esprima"),
+        estraverse = require("thirdparty/estraverse-master/estraverse"),
+        annotator = require("annotator"),
+        _ = require("thirdparty/lodash-amd/modern/main");
 
     var EMPTY_MSG = "No function found";
+    var DUPLICATE_MSG = "There is already some JSDoc for the next annotatable";
     var COMMAND_ID = "annotate.annotate";
     var MENU_NAME = "Annotate function";
 
     // Global editor instance
     var _editor = {};
     var _output = {};
-    
-    
+
+
     /**
      * Create a jsdoc annotation and prepend it in the active document
-     */ 
+     */
     var annotate = function () {
         // Get current active editor
         _editor = EditorManager.getCurrentFullEditor();
 
         //Get cursor position and set it to the beginning of the line
         var pos = _editor.getCursorPos();
-        pos.ch = 0;
+        //pos.ch = 0;
 
         // Get the text from the start of the document to the current cursor position and count it's length'
-        var txtTo = _editor._codeMirror.getRange({
+        var txtTo = _editor.document.getRange({
             line: 0,
             ch: 0
         }, pos);
         var cursorPosition = txtTo.length;
 
         // Get full txt
-        var fullTxt = _editor._codeMirror.getValue();
+        var fullTxt = _editor.document.getText();
 
-        // Parse text
-        var acornTxtFull = Acorn_loose.parse_dammit(fullTxt, {
-            locations: true
+        // get the ast
+        var ast = esprima.parse(fullTxt, {
+            tolerant: true,
+            attachComment: true,
+            loc: true,
+            range: true
         });
 
-        // Find next function
-        var found = new Walker.findNodeAfter(acornTxtFull, cursorPosition, "Function");
+        var isAnnotated = false;
+        var lastAnnotatable;
 
-        if (found) {
-            // There was a result, so build jsdoc
-            _output = {};
-            _output.loc = found.node.loc;
-            _output.prefix = "";
-            _output.name = found.node.id ? found.node.id.name : null;
-            _output.params = [];
-            _output.returnValue = undefined;
-
-            // Add parameters to the _output object
-            found.node.params.forEach(function (param) {
-                _output.params.push(param.name);
-            });
-
-            // Find and add return value
-            var foundReturnValue = new Walker.findNodeAfter(found.node, 0, "ReturnStatement");
-            _output.returnValue = foundReturnValue.node ? foundReturnValue.node.argument.name : undefined;
-
-            // set prefix (find first none whitespace character)
-            var codeLine = _editor._codeMirror.getLine(_output.loc.start.line - 1);
-            _output.prefix = codeLine.substr(0, codeLine.length - codeLine.trimLeft().length).replace(/[^\s\n]/g, ' ');
-
-            // build annotation string
-            var _outputString = _getJSDocString(_output);
-
-            // insertJsdoc string into editor
-            _insertJSDocString(_outputString, _output.loc);
-        } else {
-            // No function definition found
-            window.alert(EMPTY_MSG);
-        }
-    };
-
-    /**
-     * Get a functions name 
-     */ 
-    var _getName = function () {
-        //Todo
-    };
-
-    /**
-     * Get a functions return value
-     */ 
-    var _getReturnValue = function () {
-        //Todo
-    };
-
-    /**
-     * Build the string representation of the  
-     * @param {object} jsdoc object containing jsdoc properties 
-     * @returns {string} annotation as a string 
-     */ 
-    var _getJSDocString = function (jsdoc) {
-        var jsdocString = jsdoc.prefix + "/**\n";
-
-        if (jsdoc.name && jsdoc.name.charAt(0) === "_") {
-            jsdocString += jsdoc.prefix + " * @private \n";
-        }
-
-        // Add description
-        jsdocString += jsdoc.prefix + " * Description \n";
-
-        jsdoc.params.forEach(function (param) {
-            jsdocString += jsdoc.prefix + " * @param {type} " + param + " Description \n";
+        // traverse the ast
+        estraverse.traverse(ast, {
+            enter: enter
         });
-        if (jsdoc.returnValue)
-            jsdocString += jsdoc.prefix + " * @returns {type} Description \n";
 
-        jsdocString += jsdoc.prefix + " */ \n";
+        function enter(node, parent) {
+            // If one annotation is done, break traversing the tree
+            if (isAnnotated) return estraverse.VisitorOption.Break;
+            // Check if node is annotatable and if so, call it's anotation function
+            if (isAnnotatable(node)) {
+                // Only annotate the element after the cursor
+                if (node.range[0] < cursorPosition) {
+                    lastAnnotatable = node;
+                } else {
+                    isAnnotated = true;
+                    var jsDoc;
+                    // Create jsDoc annotation
+                    jsDoc = annotator[lastAnnotatable.type](lastAnnotatable, parent);
 
-        return jsdocString;
-    };
+                    // Check if there is already a jsdoc annotation for this annnotatable
+                    var jsDocCommentExists = false;
+                    _.forEach(lastAnnotatable.leadingComments, function (value, key) {
+                        if (value.type === "Block" && value.value.charAt(0) === "*") {
+                            // jsDoc comment
+                            jsDocCommentExists = true;
+                            //Todo: Maybe ask, whether user wants to overwrite last comment?...
+                        }
+                    });
 
-    /**
-     * Insert the JSDoc annotation string to the document 
-     * @param {string} jSDocString The JSDoc annotation string
-     * @param {location} loc location of the function found 
-     */ 
-    var _insertJSDocString = function (jSDocString, loc) {
-        var pos = {
-            line: loc.start.line - 1,
-            ch: 0
-        };
+                    // Insert jsDoc into output variable
+                    if (_.isString(jsDoc) && !jsDocCommentExists) {
+                        var insertLocation = {
+                            line: lastAnnotatable.loc.start.line-1,
+                            ch: lastAnnotatable.loc.start.column
+                        };
+                        _editor.document.replaceRange(jsDoc, insertLocation);
+                        EditorManager.focusEditor();
+                    }
+                }
+            }
+        }
 
-        // Place jsdocString in the editor
-        _editor._codeMirror.replaceRange(jSDocString, pos);
-
-        EditorManager.focusEditor();
+        /**
+         * Check if a node is of an annotatable type
+         * @param {object} Check if node is annotatable
+         */
+        function isAnnotatable(node) {
+            // Annotatable elements
+            var ANNOTATABLES = [
+                esprima.Syntax.ExpressionStatement,
+                esprima.Syntax.VariableDeclaration,
+                esprima.Syntax.FunctionDeclaration,
+                esprima.Syntax.Property
+            ]; // That's it for the timebeeing
+            if (ANNOTATABLES.indexOf(node.type) != -1) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     };
 
     // Register stuff when brackets finished loading
@@ -171,5 +149,5 @@ define(function (require, exports, module) {
 
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuDivider();
-    menu.addMenuItem(COMMAND_ID); //"menu-edit-annotate", 
+    menu.addMenuItem(COMMAND_ID); //"menu-edit-annotate"
 });

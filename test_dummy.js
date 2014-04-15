@@ -11,8 +11,8 @@ define(function (require, exports, module) {
     var greetings = "Hello world";
     
 
-    function declaration(input) {            
-        
+    function declaration(input) {
+   
         var content = "stuff";
     }
 
