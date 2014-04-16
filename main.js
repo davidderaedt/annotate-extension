@@ -89,36 +89,37 @@ define(function (require, exports, module) {
         function enter(node, parent) {
             // If one annotation is done, break traversing the tree
             if (isAnnotated) return estraverse.VisitorOption.Break;
+
             // Check if node is annotatable and if so, call it's anotation function
-            if (isAnnotatable(node)) {
-                // Only annotate the element after the cursor
-                if (node.range[0] < cursorPosition) {
-                    lastAnnotatable = node;
-                } else {
-                    isAnnotated = true;
-                    var jsDoc;
-                    // Create jsDoc annotation
-                    jsDoc = annotator[lastAnnotatable.type](lastAnnotatable, parent);
+            if (isAnnotatable(node) && node.range[0] < cursorPosition) {
+                lastAnnotatable = node;
+            }
 
-                    // Check if there is already a jsdoc annotation for this annnotatable
-                    var jsDocCommentExists = false;
-                    _.forEach(lastAnnotatable.leadingComments, function (value, key) {
-                        if (value.type === "Block" && value.value.charAt(0) === "*") {
-                            // jsDoc comment
-                            jsDocCommentExists = true;
-                            //Todo: Maybe ask, whether user wants to overwrite last comment?...
-                        }
-                    });
+            // Annotate the last annotatable
+            if (node.range[0] > cursorPosition) {
+                isAnnotated = true;
+                var jsDoc;
+                // Create jsDoc annotation
+                jsDoc = annotator[lastAnnotatable.type](lastAnnotatable, parent);
 
-                    // Insert jsDoc into output variable
-                    if (_.isString(jsDoc) && !jsDocCommentExists) {
-                        var insertLocation = {
-                            line: lastAnnotatable.loc.start.line-1,
-                            ch: lastAnnotatable.loc.start.column
-                        };
-                        _editor.document.replaceRange(jsDoc, insertLocation);
-                        EditorManager.focusEditor();
+                // Check if there is already a jsdoc annotation for this annnotatable
+                var jsDocCommentExists = false;
+                _.forEach(lastAnnotatable.leadingComments, function (value, key) {
+                    if (value.type === "Block" && value.value.charAt(0) === "*") {
+                        // jsDoc comment
+                        jsDocCommentExists = true;
+                        //Todo: Maybe ask, whether user wants to overwrite last comment?...
                     }
+                });
+
+                // Insert jsDoc into output variable
+                if (_.isString(jsDoc) && !jsDocCommentExists) {
+                    var insertLocation = {
+                        line: lastAnnotatable.loc.start.line - 1,
+                        ch: lastAnnotatable.loc.start.column
+                    };
+                    _editor.document.replaceRange(jsDoc, insertLocation);
+                    EditorManager.focusEditor();
                 }
             }
         }
