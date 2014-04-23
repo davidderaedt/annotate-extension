@@ -34,7 +34,7 @@ define(function (require, exports, module) {
         EditorManager       = brackets.getModule("editor/EditorManager"),
         KeyBindingManager   = brackets.getModule("command/KeyBindingManager"),
         Menus               = brackets.getModule("command/Menus"),
-		JSUtils             = brackets.getModule("language/JSUtils");
+        JSUtils             = brackets.getModule("language/JSUtils");
 
 
     var EMPTY_MSG   = "No function found";
@@ -94,27 +94,27 @@ define(function (require, exports, module) {
         
         var results = txtFrom.match(new RegExp(REGEX_PATTERNS.jsVariable,'g'));
 		
-		var functionList = JSUtils.findAllMatchingFunctionsInText (txtFrom, "*");
+        var functionList = JSUtils.findAllMatchingFunctionsInText (txtFrom, "*");
 		
-		if (functionList.length === 0)
-			return;
+        if (functionList.length === 0)
+            return;
 		
-		// we interested only in first function
-		var functionName = functionList[0].name;
-		
-		var result = {
-			name:         functionName,
-			params:       results.slice(results.indexOf('function')+1),
-			prefix:       getPrefix(txtFrom, results[0]),
-			returnsValue: returnsValue
-		};
-		if (results.indexOf ('function') > results.indexOf (functionName)) { // …funct = function (…
-			return result;
-		} else if (results.indexOf ('function') < results.indexOf (functionName)) { // function funct (…
-			result.params = results.slice(results.indexOf (functionName)+1);
-			return result;
-		}
-		return;
+        // we interested only in first function
+        var functionName = functionList[0].name;
+
+        var result = {
+            name:         functionName,
+            params:       results.slice(results.indexOf('function')+1),
+            prefix:       getPrefix(txtFrom, results[0]),
+            returnsValue: returnsValue
+        };
+        if (results.indexOf ('function') > results.indexOf (functionName)) { // …funct = function (…
+            return result;
+        } else if (results.indexOf ('function') < results.indexOf (functionName)) { // function funct (…
+            result.params = results.slice(results.indexOf (functionName)+1);
+            return result;
+        }
+        return;
     }
     
     
@@ -135,18 +135,18 @@ define(function (require, exports, module) {
         }
         
         // Add description
-        output.push(" * Description");
+        output.push(" * [Description of "+fname+""]");
         
         // Add parameters
         if (params.length > 0) {
             var i;
             for (i = 0; i < params.length; i++) {
                 var param = params[i];
-                output.push(" * @param {type} " + param + " Description");
+                output.push(" * @param {type} " + param + " [Description]");
             }
         }
         
-        if (returnsValue) output.push(" * @returns {type} Description");
+        if (returnsValue) output.push(" * @returns {type} [Description]");
 
         // TODO use if 'return' is found in the function body?
         //output += " * @return {type} ???\n";
