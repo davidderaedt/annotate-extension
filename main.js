@@ -181,7 +181,7 @@ define(function (require, exports, module) {
     }, {
         "key": "Cmd-Alt-A",
         "platform": "mac"
-    });
+    }]);
 
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuDivider();
