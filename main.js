@@ -177,6 +177,7 @@ define(function (require, exports, module) {
 
     CommandManager.register(MENU_NAME, COMMAND_ID, annotate);
     KeyBindingManager.addBinding(COMMAND_ID, "Ctrl-Alt-A");
+    KeyBindingManager.addBinding(COMMAND_ID, "Cmd-Alt-A", "mac");
 
     var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
     menu.addMenuDivider();
