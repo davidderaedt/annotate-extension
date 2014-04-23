@@ -33,7 +33,8 @@ define(function (require, exports, module) {
     var CommandManager      = brackets.getModule("command/CommandManager"),
         EditorManager       = brackets.getModule("editor/EditorManager"),
         KeyBindingManager   = brackets.getModule("command/KeyBindingManager"),
-        Menus               = brackets.getModule("command/Menus");
+        Menus               = brackets.getModule("command/Menus"),
+		JSUtils             = brackets.getModule("language/JSUtils");
 
 
     var EMPTY_MSG   = "No function found";
@@ -77,13 +78,7 @@ define(function (require, exports, module) {
     function getTarget() {
         
         var editor = EditorManager.getCurrentFullEditor(),
-            pos    = editor.getCursorPos(),
-            functionDeclarationRegex = new RegExp('^[a-z0-9]*\\s*\\n*\\bfunction\\b\\s*' + REGEX_PATTERNS.jsVariable + '\\s*\\(\\s*(' +
-                                                  REGEX_PATTERNS.jsVariable + '\\s*,?)*\\s*\\)','g'),
-
-            functionExpresionRegex = new RegExp('^[a-z0-9]*\\s*\\n*(var|(' + REGEX_PATTERNS.jsVariable + '.)*(' + REGEX_PATTERNS.jsVariable + ')?)?\\s*'+ REGEX_PATTERNS.jsVariable + '\\s*(=|:)\\s*function\\s*\\(\\s*(' +
-                                                REGEX_PATTERNS.jsVariable + '\\s*(,\\s*)?)*\\s*\\)\\s*','g');
-
+            pos    = editor.getCursorPos();
         pos.ch = 0;
  
         // Take the text of the document, starting with the current cursor line
@@ -98,26 +93,28 @@ define(function (require, exports, module) {
         txtFrom = txtFrom.replace(new RegExp(REGEX_PATTERNS.comment,'g'), '');
         
         var results = txtFrom.match(new RegExp(REGEX_PATTERNS.jsVariable,'g'));
-        switch(true) {
-        case functionExpresionRegex.test(txtFrom):
-            return {
-                //check for 'var'
-                name:results[results.indexOf('function')-1],
-                params:results.slice(results.indexOf('function')+1),
-                prefix: getPrefix(txtFrom, results[0]),
-                returnsValue:returnsValue
-            };
-        case functionDeclarationRegex.test(txtFrom):
-            //console.log(results[1]);
-            return {
-                name:results[1],
-                params:results.slice(2),
-                prefix: getPrefix(txtFrom, results[0]),
-                returnsValue:returnsValue
-            };
-        default:
-            return null;
-        }
+		
+		var functionList = JSUtils.findAllMatchingFunctionsInText (txtFrom, "*");
+		
+		if (functionList.length === 0)
+			return;
+		
+		// we interested only in first function
+		var functionName = functionList[0].name;
+		
+		var result = {
+			name:         functionName,
+			params:       results.slice(results.indexOf('function')+1),
+			prefix:       getPrefix(txtFrom, results[0]),
+			returnsValue: returnsValue
+		};
+		if (results.indexOf ('function') > results.indexOf (functionName)) { // …funct = function (…
+			return result;
+		} else if (results.indexOf ('function') < results.indexOf (functionName)) { // function funct (…
+			result.params = results.slice(results.indexOf (functionName)+1);
+			return result;
+		}
+		return;
     }
     
     
